@@ -6,7 +6,7 @@
 // This include statement must be before IPHLpapi include
 #include "component/Decider.h"
 #include "component/XBee.h"
-
+#pragma comment(lib, "WS2_32.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
 #include <iphlpapi.h>
 
@@ -38,7 +38,7 @@ public:
 	/* Calls WSAStartup, which is required to be succesfully run before any networking calls can be made.*/
 	static void initNetworking();
 	static std::string getHardwareAddress();
-
+	std::string getIpAddr();
 	Transponder(Aircraft*, concurrency::concurrent_unordered_map<std::string, Aircraft*>*, concurrency::concurrent_unordered_map<std::string, ResolutionConnection*>*, Decider*);
 	~Transponder();
 	DWORD receiveLocation(), sendLocation(), keepalive();
@@ -59,7 +59,7 @@ protected:
 	SOCKET inSocket;
 	struct sockaddr_in incoming;
 	struct sockaddr_in outgoing;
-
+	struct sockaddr_in outgoing2;
 	unsigned sinlen;
 	std::atomic<int> communication;
 	xplane::Location intruderLocation, myLocation;
@@ -85,7 +85,7 @@ private:
 	std::vector<Aircraft*> allocatedAircraft_;
 	concurrency::concurrent_unordered_map<std::string, int> keepAliveMap_;
 
-	std::string getIpAddr();
+	
 	void createSocket(SOCKET*, struct sockaddr_in*, int, int);
 
 	DWORD Transponder::processIntruder(std::string intruderID);

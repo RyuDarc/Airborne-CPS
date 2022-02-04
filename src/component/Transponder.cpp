@@ -39,9 +39,43 @@ Transponder::Transponder(Aircraft* ac,
 	else {
 		BOOL bOptVal = TRUE;
 		setsockopt(outSocket, SOL_SOCKET, SO_BROADCAST, (char*)&bOptVal, sizeof(int));
-		outgoing.sin_addr.s_addr = htonl(-1);
+		//outgoing.sin_addr.s_addr = htonl(-1);
+		outgoing.sin_addr.s_addr = inet_addr(getIpAddr().c_str());
 		outgoing.sin_port = htons(BROADCAST_PORT);
 		outgoing.sin_family = PF_INET;
+
+		u_long broad = htonl(-1);
+		ULONG buflen = sizeof(IP_ADAPTER_INFO);
+		IP_ADAPTER_INFO* pAdapterInfo = (IP_ADAPTER_INFO*)malloc(buflen);
+
+		if (GetAdaptersInfo(pAdapterInfo, &buflen) == ERROR_BUFFER_OVERFLOW)
+		{
+			free(pAdapterInfo);
+			pAdapterInfo = (IP_ADAPTER_INFO*)malloc(buflen);
+		}
+		
+		if (GetAdaptersInfo(pAdapterInfo, &buflen) == NO_ERROR)
+		{
+			for (IP_ADAPTER_INFO* pAdapter = pAdapterInfo; pAdapter; pAdapter = pAdapter->Next)
+			{
+				if (strcmp(pAdapter->IpAddressList.IpAddress.String, getIpAddr().c_str()) == 0) {
+					broad = inet_addr(pAdapter->IpAddressList.IpMask.String);
+					broad = inet_addr(getIpAddr().c_str()) | (~broad);
+					XPLMDebugString("subnet is");
+					XPLMDebugString(pAdapter->IpAddressList.IpMask.String);
+				}
+					//printf("%s (%s)\n", pAdapter->IpAddressList.IpAddress.String, pAdapter->Description);
+					
+			}
+		}
+
+		if (pAdapterInfo)
+			free(pAdapterInfo);
+		
+		outgoing2.sin_addr.s_addr = broad;
+		outgoing2.sin_port = htons(BROADCAST_PORT);
+		outgoing2.sin_family = PF_INET;
+		
 		bind(outSocket, (struct sockaddr*) & outgoing, sinlen);
 	}
 }
@@ -233,7 +267,7 @@ DWORD Transponder::processIntruder(std::string intruderID)
 	conn->lock.unlock();
 
 	decider_->analyze(intruder);
-
+	return 0;
 }
 
 DWORD Transponder::sendLocation()
@@ -258,7 +292,7 @@ DWORD Transponder::sendLocation()
 
 
 		// UDP Broadcast
-		sendto(outSocket, (const char*)buffer, size, 0, (struct sockaddr*) & outgoing, sinlen);
+		sendto(outSocket, (const char*)buffer, size, 0, (struct sockaddr*) & outgoing2, sinlen);
 
 		// XBee Broadcast
 		xb->XBeeBroadcast(myLocation.getPLANE(), xbComm);
@@ -342,6 +376,7 @@ std::string Transponder::getHardwareAddress()
 					pAdapterInfo->Address[4], pAdapterInfo->Address[5]);
 
 				hardwareAddress = macAddr;
+				XPLMDebugString(hardwareAddress.c_str());
 				pAdapter = pAdapter->Next;
 			}
 		}
@@ -386,6 +421,7 @@ std::string Transponder::getIpAddr()
 	InetNtop(AF_INET, &name.sin_addr.s_addr, addr, 16);
 	closesocket(sock);
 	std::string ip(addr);
+	XPLMDebugString("The ip is:");
 	XPLMDebugString(ip.c_str());
 	return ip;
 }

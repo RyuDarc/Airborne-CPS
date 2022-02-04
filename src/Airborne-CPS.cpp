@@ -226,7 +226,7 @@ PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc) {
 	XPLMAppendMenuItem(menuID, "Toggle Hostile", (void*)"hostileToggle", 1);
 	XPLMAppendMenuItem(menuID, "Toggle Debug", (void*)"debugToggle", 1);
 	XPLMAppendMenuItem(menuID, "XBee Config", (void*)XBEE_CONFIG_MENU, 1);
-
+	XPLMAppendMenuItem(menuID, "Connect to server", (void*)XBEE_CONFIG_MENU, 1);
 	gXBeeMenuItem = 0;
 
 	/*End of Plugin Menu Creation*/
@@ -601,7 +601,7 @@ void CreateXBeeWidget(int x, int y, int w, int h)
 	// Create the Main Widget window.
 	XBeeWidget = XPCreateWidget(x, y, x2, y2,
 		1,										// Visible
-		"XBee Configuration - SUNY Oswego",		// desc
+		"TCP Server & XBee Configuration - SUNY Oswego",		// desc
 		1,										// is root
 		NULL,									// not in a container
 		xpWidgetClass_MainWindow);
@@ -651,6 +651,52 @@ void CreateXBeeWidget(int x, int y, int w, int h)
 		0,		// root
 		XBeeWidget,
 		xpWidgetClass_Button);
+	XPCreateWidget(x + 25, y2 + 280, x + 155, y2 + 150,
+		1,	// Visible
+		"Server:",// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_Caption);
+	XPCreateWidget(x + 25, y2+250, x + 155, y2+150,
+		1,	// Visible
+		"",// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_TextField);
+	XPCreateWidget(x + 175, y2 + 280, x + 205, y2 + 150,
+		1,	// Visible
+		"Port:",// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_Caption);
+	XPCreateWidget(x + 175, y2 + 250, x + 205, y2 + 150,
+		1,	// Visible
+		"",// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_TextField);
+	XPCreateWidget(x + 25, y2 + 200, x + 125, y2 + 150,
+		1,	// Visible
+		"Connect",// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_Button);
+	
+	XPCreateWidget(x + 25, y2 + 130, x + 125, y2 + 100,
+		1,	// Visible
+		transponder->getHardwareAddress().c_str(),// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_Caption);
+
+	XPCreateWidget(x + 25, y2 + 170, x + 125, y2 + 150,
+		1,	// Visible
+		transponder->getIpAddr().c_str(),// desc
+		0,		// root
+		XBeeWidget,
+		xpWidgetClass_Caption);
+
+
 	XPSetWidgetProperty(XBeeEnableRoutingCheckbox, xpProperty_ButtonType, xpRadioButton);
 	XPSetWidgetProperty(XBeeEnableRoutingCheckbox, xpProperty_ButtonBehavior, xpButtonBehaviorCheckBox);
 	XPSetWidgetProperty (XBeeEnableRoutingCheckbox, xpProperty_ButtonState, transponder->enableXBeeRouting);
